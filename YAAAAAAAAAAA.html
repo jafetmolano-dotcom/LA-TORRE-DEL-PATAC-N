@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Torre del Patacón - App Oficial</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        :root {
+            --verde-principal: #1E502B;
+            --amarillo-oro: #F2BA1D;
+            --gris-fondo: #f8f9fa;
+            --blanco: #ffffff;
+            --negro: #212529;
+            --nequi: #7000FF;
+            --daviplata: #E4022B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+        /* Contenedor tipo Celular */
+        .app-container {
+            width: 100%; max-width: 412px; height: 850px;
+            background-color: var(--gris-fondo); border-radius: 30px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.5); display: flex;
+            flex-direction: column; overflow: hidden; position: relative; border: 8px solid #111;
+        }
+
+        /* AppBar / Encabezado */
+        .app-header {
+            background-color: var(--verde-principal); color: var(--blanco);
+            text-align: center; padding: 18px 10px; font-size: 1.25rem; font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15); display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* Contenido dinámico con scroll */
+        .app-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* CATEGORÍAS DEL MENÚ */
+        .section-title {
+            color: var(--verde-principal); font-size: 1.1rem; font-weight: bold;
+            margin: 20px 0 10px 0; border-left: 5px solid var(--amarillo-oro); padding-left: 10px; text-transform: uppercase;
+        }
+
+        /* TARJETAS DE PRODUCTOS */
+        .menu-card {
+            background-color: var(--blanco); border-radius: 14px; padding: 14px;
+            margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.04); border: 1px solid #eee;
+        }
+
+        .menu-info h4 { color: var(--negro); font-size: 1.05rem; margin-bottom: 4px; }
+        .menu-info p { color: #6c757d; font-size: 0.85rem; }
+        .menu-action { display: flex; align-items: center; gap: 12px; }
+        .price { font-weight: bold; color: var(--verde-principal); font-size: 1.1rem; }
+        
+        .add-btn {
+            background-color: var(--amarillo-oro); border: none; border-radius: 10px;
+            width: 38px; height: 38px; cursor: pointer; display: flex; justify-content: center; align-items: center;
+            transition: transform 0.1s;
+        }
+        .add-btn:active { transform: scale(0.9); }
+
+        /* Estilos de Métodos de Pago Botones Visuales */
+        .payment-selector { display: flex; gap: 8px; margin-bottom: 15px; margin-top: 5px; }
+        .pay-option {
+            flex: 1; text-align: center; padding: 12px 5px; border-radius: 10px;
+            border: 2px solid #ccc; font-weight: bold; cursor: pointer; font-size: 0.85rem;
+            transition: all 0.2s ease; background: white; color: #555;
+        }
+        .pay-option.selected[data-method="Efectivo"] { border-color: var(--verde-principal); background-color: rgba(30,80,43,0.1); color: var(--verde-principal); }
+        .pay-option.selected[data-method="Nequi"] { border-color: var(--nequi); background-color: rgba(112,0,255,0.1); color: var(--nequi); }
+        .pay-option.selected[data-method="Daviplata"] { border-color: var(--daviplata); background-color: rgba(228,2,43,0.1); color: var(--daviplata); }
+
+        /* FORMULARIOS Y CAMPOS */
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 6px; color: #495057; font-size: 0.9rem; font-weight: 600; }
+        .form-group input {
+            width: 100%; padding: 14px; border: 1px solid #ced4da; border-radius: 10px; outline: none; font-size: 0.95rem; background-color: #fff;
+        }
+        .form-group input:focus { border-color: var(--verde-principal); }
+
+        .submit-btn {
+            background-color: var(--verde-principal); color: var(--blanco); border: none;
+            width: 100%; padding: 15px; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* SECCIÓN CARRITO FLOTANTE RESUMEN */
+        .cart-summary {
+            background-color: var(--verde-principal); color: white; padding: 15px;
+            border-radius: 12px; margin-top: 25px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 10px rgba(30, 80, 43, 0.3);
+        }
+        .order-now-btn {
+            background-color: var(--amarillo-oro); color: var(--negro); border: none;
+            padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;
+        }
+
+        /* PERFIL DE USUARIO */
+        .profile-hero { text-align: center; padding: 30px 10px; }
+        .profile-avatar {
+            width: 90px; height: 90px; background-color: var(--verde-principal);
+            border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; color: white; margin-bottom: 15px;
+        }
+        .info-box { background-color: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #eee; }
+
+        /* TABLAS DEL PANEL DE ADMINISTRACIÓN */
+        .adm-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; background: white; }
+        .adm-table th, .adm-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .adm-table th { background-color: var(--verde-principal); color: white; }
+
+        /* BARRA INFERIOR DE NAVEGACIÓN */
+        .bottom-nav {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 70px;
+            background-color: var(--blanco); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #dee2e6;
+            box-shadow: 0 -3px 10px rgba(0,0,0,0.05);
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; color: #6c757d;
+            cursor: pointer; font-size: 0.8rem; background: none; border: none; width: 33.3%; height: 100%; justify-content: center; font-weight: 500;
+        }
+        .nav-item.active { color: var(--verde-principal); }
+        .nav-item i { font-size: 1.6rem; margin-bottom: 3px; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div class="app-header">
+            <span style="width: 30px;"></span>
+            <span id="app-title">La Torre del Patacón</span>
+            <button onclick="switchScreen('adm', this)" style="background: none; border: none; color: white; cursor: pointer; padding: 5px;">
+                <i class="material-icons">admin_panel_settings</i>
+            </button>
+        </div>
+
+        <div class="app-content">
+
+            <div id="screen-menu" class="screen active">
+                
+                <div class="section-title">Picadas Sencillas</div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Butifarra</h4><p>Porción individual tradicional</p></div>
+                    <div class="menu-action"><span class="price">$7.000</span><button class="add-btn" onclick="addToCart('Butifarra Sencilla', 7000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Chorizo</h4><p>Sabor ahumado de la casa</p></div>
+                    <div class="menu-action"><span class="price">$10.000</span><button class="add-btn" onclick="addToCart('Chorizo Sencillo', 10000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Salchicha</h4><p>Porción urbana picada</p></div>
+                    <div class="menu-action"><span class="price">$10.000</span><button class="add-btn" onclick="addToCart('Salchicha Sencilla', 10000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Pollo</h4><p>Dados de pechuga jugosos</p></div>
+                    <div class="menu-action"><span class="price">$12.000</span><button class="add-btn" onclick="addToCart('Pollo Sencillo', 12000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Suiza</h4><p>Salchicha suiza premium</p></div>
+                    <div class="menu-action"><span class="price">$12.000</span><button class="add-btn" onclick="addToCart('Suiza Sencilla', 12000)"><i class="material-icons">add</i></button></div>
+                </div>
+
+                <div class="section-title">Combinadas Buti</div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Buti + Pollo</h4><p>Combinación balanceada y rica</p></div>
+                    <div class="menu-action"><span class="price">$15.000</span><button class="add-btn" onclick="addToCart('Buti + Pollo', 15000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Buti + Salchicha</h4><p>Sabor callejero duplicado</p></div>
+                    <div class="menu-action"><span class="price">$15.000</span><button class="add-btn" onclick="addToCart('Buti + Salchicha', 15000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Buti + Chorizo</h4><p>Tradición costeña en un plato</p></div>
+                    <div class="menu-action"><span class="price">$15.000</span><button class="add-btn" onclick="addToCart('Buti + Chorizo', 15000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Buti + Suiza</h4><p>Mezcla ganadora premium</p></div>
+                    <div class="menu-action"><span class="price">$17.000</span><button class="add-btn" onclick="addToCart('Buti + Suiza', 17000)"><i class="material-icons">add</i></button></div>
+                </div>
+
+                <div class="section-title">Combinadas Chorizo</div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Chorizo + Buti</h4><p>Para amantes del embutido</p></div>
+                    <div class="menu-action"><span class="price">$15.000</span><button class="add-btn" onclick="addToCart('Chorizo + Buti', 15000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Chorizo + Salchicha</h4><p>Sabor artesanal combinado</p></div>
+                    <div class="menu-action"><span class="price">$17.000</span><button class="add-btn" onclick="addToCart('Chorizo + Salchicha', 17000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Chorizo + Pollo</h4><p>Combinado potente de proteínas</p></div>
+                    <div class="menu-action"><span class="price">$17.000</span><button class="add-btn" onclick="addToCart('Chorizo + Pollo', 17000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Chorizo + Suiza</h4><p>Explosión de sabor premium</p></div>
+                    <div class="menu-action"><span class="price">$22.000</span><button class="add-btn" onclick="addToCart('Chorizo + Suiza', 22000)"><i class="material-icons">add</i></button></div>
+                </div>
+
+                <div class="section-title">Combinadas Salchicha</div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Salchicha + Pollo</h4><p>Mezcla clásica urbana</p></div>
+                    <div class="menu-action"><span class="price">$17.000</span><button class="add-btn" onclick="addToCart('Salchicha + Pollo', 17000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Salchicha + Suiza</h4><p>Doble combinación espectacular</p></div>
+                    <div class="menu-action"><span class="price">$20.000</span><button class="add-btn" onclick="addToCart('Salchicha + Suiza', 20000)"><i class="material-icons">add</i></button></div>
+                </div>
+
+                <div class="section-title">Combinadas Pollo</div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Pollo + Buti</h4><p>Combinación ligera y sabrosa</p></div>
+                    <div class="menu-action"><span class="price">$15.000</span><button class="add-btn" onclick="addToCart('Pollo + Buti', 15000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Pollo + Salchicha</h4><p>Rápido y contundente</p></div>
+                    <div class="menu-action"><span class="price">$17.000</span><button class="add-btn" onclick="addToCart('Pollo + Salchicha', 17000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Pollo + Chorizo</h4><p>Mezcla deliciosa full energía</p></div>
+                    <div class="menu-action"><span class="price">$17.000</span><button class="add-btn" onclick="addToCart('Pollo + Chorizo', 17000)"><i class="material-icons">add</i></button></div>
+                </div>
+
+                <div class="section-title">Picadas con Todo</div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>Picada 4 Carnes</h4><p>Buti + Chorizo + Salchicha + Pollo</p></div>
+                    <div class="menu-action"><span class="price">$25.000</span><button class="add-btn" onclick="addToCart('Picada 4 Carnes', 25000)"><i class="material-icons">add</i></button></div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-info"><h4>La Cima del Sabor (5 Carnes)</h4><p>Buti + Chorizo + Salchicha + Pollo + Suiza</p></div>
+                    <div class="menu-action"><span class="price">$35.000</span><button class="add-btn" onclick="addToCart('La Cima (5 Carnes)', 35000)"><i class="material-icons">add</i></button></div>
+                </div>
+
+                <div class="section-title">Selecciona Método de Pago</div>
+                <div class="payment-selector">
+                    <div class="pay-option selected" data-method="Efectivo" onclick="selectPaymentMode('Efectivo')">💵 Efectivo</div>
+                    <div class="pay-option" data-method="Nequi" onclick="selectPaymentMode('Nequi')">📱 Nequi</div>
+                    <div class="pay-option" data-method="Daviplata" onclick="selectPaymentMode('Daviplata')">🔴 Daviplata</div>
+                </div>
+
+                <div class="cart-summary">
+                    <div>
+                        <p style="font-size: 0.85rem; opacity: 0.9;">Total Orden:</p>
+                        <h3 id="cart-total-text">$0</h3>
+                    </div>
+                    <button class="order-now-btn" onclick="sendOrder()">
+                        <i class="material-icons">shopping_cart</i> Pedir Ya
+                    </button>
+                </div>
+            </div>
+
+            <div id="screen-register" class="screen">
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <h3>Información de Envío</h3>
+                    <p style="color: #666; font-size: 0.9rem;">Registra los datos para la base de datos de domicilios</p>
+                </div>
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" id="reg-name" placeholder="Ej. Carlos Mendoza">
+                </div>
+                <div class="form-group">
+                    <label>Número de Celular</label>
+                    <input type="tel" id="reg-phone" placeholder="Ej. 3181378809">
+                </div>
+                <div class="form-group">
+                    <label>Dirección del Domicilio</label>
+                    <input type="text" id="reg-address" placeholder="Ej. Urbanización El Encanto">
+                </div>
+                <button class="submit-btn" onclick="saveUserData()">Guardar en Base de Datos</button>
+            </div>
+
+            <div id="screen-profile" class="screen">
+                <div class="profile-hero">
+                    <div class="profile-avatar"><i class="material-icons" style="font-size: 3.5rem;">account_circle</i></div>
+                    <h3 id="profile-name-display">Invitado</h3>
+                    <p style="color: #f2ba1d; font-weight: bold; font-size: 0.95rem; margin-top: 4px;">Cliente Activo de la App</p>
+                </div>
+                <div class="info-box">
+                    <h5 style="color: var(--verde-principal); margin-bottom: 5px;">Dirección de entrega predeterminada:</h5>
+                    <p id="profile-address-display" style="color: #444;">No se ha configurado ninguna dirección física.</p>
+                </div>
+                <div class="info-box" style="text-align: center;">
+                    <p style="font-size: 0.9rem; color:#666;">¿Soporte con la plataforma digital?</p>
+                    <a href="https://wa.me/573181378809" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: none; display: block; margin-top: 8px;">
+                        Contactar Soporte Técnico Directo
+                    </a>
+                </div>
+            </div>
+
+            <div id="screen-adm" class="screen">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h3>📊 Sistema Central de Datos (ADM)</h3>
+                    <p style="font-size: 0.85rem; color: #666;">Control operacional guardado localmente</p>
+                </div>
+                
+                <h5 style="color: var(--verde-principal); margin-bottom: 8px;">👥 Base de Datos: Clientes Registrados</h5>
+                <div style="overflow-x:auto; margin-bottom: 20px;">
+                    <table class="adm-table">
+                        <thead>
+                            <tr><th>Nombre</th><th>Teléfono</th><th>Dirección</th></tr>
+                        </thead>
+                        <tbody id="adm-clients-list"></tbody>
+                    </table>
+                </div>
+
+                <h5 style="color: var(--verde-principal); margin-bottom: 8px;">📦 Historial General de Pedidos</h5>
+                <div style="overflow-x:auto;">
+                    <table class="adm-table">
+                        <thead>
+                            <tr><th>Cliente</th><th>Pedido Realizado</th><th>Total</th><th>Método Pago</th></tr>
+                        </thead>
+                        <tbody id="adm-orders-list"></tbody>
+                    </table>
+                </div>
+                
+                <button class="submit-btn" onclick="clearDatabase()" style="background-color: #dc3545; margin-top: 25px;">Reiniciar Base de Datos</button>
+            </div>
+
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-item active" onclick="switchScreen('menu', this)">
+                <i class="material-icons">restaurant_menu</i><span>Menú</span>
+            </button>
+            <button class="nav-item" onclick="switchScreen('register', this)">
+                <i class="material-icons">location_on</i><span>Dirección</span>
+            </button>
+            <button class="nav-item" onclick="switchScreen('profile', this)">
+                <i class="material-icons">person</i><span>Mi Cuenta</span>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Variables de estado del carrito
+        let cart = [];
+        let totalAmount = 0;
+        let selectedPaymentMethod = "Efectivo";
+
+        // Conectar Base de datos interna del navegador (LocalStorage)
+        let dbClients = JSON.parse(localStorage.getItem('dbClients')) || [];
+        let dbOrders = JSON.parse(localStorage.getItem('dbOrders')) || [];
+        let activeUser = JSON.parse(localStorage.getItem('activeUser')) || { name: "Invitado", phone: "", address: "" };
+
+        // Mostrar datos cargados en el perfil de inmediato
+        document.getElementById('profile-name-display').innerText = activeUser.name;
+        document.getElementById('profile-address-display').innerText = activeUser.address || "No se ha configurado ninguna dirección física.";
+
+        // Función interactiva de cambio de método de pago
+        function selectPaymentMode(method) {
+            selectedPaymentMethod = method;
+            document.querySelectorAll('.pay-option').forEach(option => option.classList.remove('selected'));
+            document.querySelector(`[data-method="${method}"]`).classList.add('selected');
+        }
+
+        // Agregar ítems al pedido
+        function addToCart(productName, price) {
+            cart.push({ name: productName, price: price });
+            totalAmount += price;
+            document.getElementById('cart-total-text').innerText = `$${totalAmount.toLocaleString('es-CO')}`;
+        }
+
+        // Registrar clientes en LocalStorage
+        function saveUserData() {
+            const name = document.getElementById('reg-name').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const address = document.getElementById('reg-address').value.trim();
+
+            if(!name || !address || !phone) { 
+                alert("Por favor diligencia todos los datos solicitados."); 
+                return; 
+            }
+
+            activeUser = { name, phone, address };
+            
+            // Si el teléfono no está registrado, se añade como cliente nuevo en la BD
+            if(!dbClients.some(c => c.phone === phone)) {
+                dbClients.push(activeUser);
+                localStorage.setItem('dbClients', JSON.stringify(dbClients));
+            }
+
+            localStorage.setItem('activeUser', JSON.stringify(activeUser));
+
+            // Actualizar vista cliente
+            document.getElementById('profile-name-display').innerText = activeUser.name;
+            document.getElementById('profile-address-display').innerText = activeUser.address;
+
+            alert("¡Información guardada con éxito en la Base de Datos local!");
+            // Redirección al Menú principal de forma automática
+            switchScreen('menu', document.querySelectorAll('.nav-item')[0]);
+        }
+
+        // Armar pedido, guardar en BD y despachar a WhatsApp
+        function sendOrder() {
+            if(cart.length === 0) { 
+                alert("El carrito se encuentra vacío. Selecciona algún patacón del menú."); 
+                return; 
+            }
+            
+            let productSummary = "";
+            cart.forEach(item => { productSummary += `• ${item.name}\n`; });
+
+            // Almacenar el registro del pedido en la sección ADM
+            let newOrder = {
+                client: activeUser.name,
+                details: productSummary.replace(/\n/g, ", "),
+                total: `$${totalAmount.toLocaleString('es-CO')}`,
+                method: selectedPaymentMethod
+            };
+            dbOrders.push(newOrder);
+            localStorage.setItem('dbOrders', JSON.stringify(dbOrders));
+
+            // Formatear texto nativo para WhatsApp
+            let message = `*LA TORRE DEL PATACÓN - NUEVO PEDIDO*\n\n`;
+            message += `*Cliente:* ${activeUser.name}\n`;
+            message += `*Dirección de Entrega:* ${activeUser.address}\n`;
+            message += `*Contacto:* ${activeUser.phone}\n\n`;
+            message += `*Detalle de Comidas:*\n${productSummary}`;
+            message += `*Valor Total:* $${totalAmount.toLocaleString('es-CO')}\n`;
+            message += `*Forma de Pago:* ${selectedPaymentMethod}\n\n`;
+            
+            if(selectedPaymentMethod !== "Efectivo") {
+                message += `_A continuación envío el pantallazo del soporte de la transferencia._`;
+            } else {
+                message += `_Pago en efectivo al mensajero en la puerta._`;
+            }
+
+            let whatsappUrl = `https://wa.me/573181378809?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+
+            // Resetear carro posterior a la compra exitosa
+            cart = []; 
+            totalAmount = 0;
+            document.getElementById('cart-total-text').innerText = "$0";
+            renderAdminData();
+        }
+
+        // Renderizar las listas dinámicas de Clientes y Ventas en el ADM
+        function renderAdminData() {
+            const clientsTable = document.getElementById('adm-clients-list');
+            const ordersTable = document.getElementById('adm-orders-list');
+
+            clientsTable.innerHTML = dbClients.length === 0 ? '<tr><td colspan="3" style="text-align:center;">Sin clientes</td></tr>' :
+                dbClients.map(c => `<tr><td>${c.name}</td><td>${c.phone}</td><td>${c.address}</td></tr>`).join('');
+                
+            ordersTable.innerHTML = dbOrders.length === 0 ? '<tr><td colspan="4" style="text-align:center;">Sin pedidos recibidos</td></tr>' :
+                dbOrders.map(o => `<tr><td>${o.client}</td><td>${o.details}</td><td><strong>${o.total}</strong></td><td>${o.method}</td></tr>`).join('');
+        }
+
+        // Limpiar registros del sistema
+        function clearDatabase() {
+            if(confirm("¿Estás completamente seguro de borrar todos los registros de Clientes e Historiales del sistema?")) {
+                localStorage.clear();
+                dbClients = []; dbOrders = [];
+                activeUser = { name: "Invitado", phone: "", address: "" };
+                
+                document.getElementById('profile-name-display').innerText = activeUser.name;
+                document.getElementById('profile-address-display').innerText = "No se ha configurado ninguna dirección física.";
+                
+                renderAdminData();
+                alert("Base de datos borrada del navegador de forma exitosa.");
+            }
+        }
+
+        // Motor de rutas nativas entre pantallas de la App
+        function switchScreen(screenName, element) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+
+            document.getElementById(`screen-${screenName}`).classList.add('active');
+            if(element.classList.contains('nav-item')) element.classList.add('active');
+
+            // Título de la AppBar dependiente de la sección
+            document.getElementById('app-title').innerText = 
+                screenName === 'menu' ? 'La Torre del Patacón' :
+                screenName === 'register' ? 'Configurar Dirección' :
+                screenName === 'profile' ? 'Mi Perfil' : 'Panel ADM Interno';
+
+            if(screenName === 'adm') renderAdminData();
+        }
+    </script>
+</body>
+</html>
